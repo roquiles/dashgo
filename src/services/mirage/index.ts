@@ -1,4 +1,4 @@
-import { createServer, Factory, Model } from "miragejs";
+import { createServer, Factory, Model, Response } from "miragejs";
 import faker from "faker";
 
 type User = {
@@ -28,14 +28,34 @@ export function makeServer() {
     },
 
     seeds(server) {
-      server.createList("user", 10);
+      server.createList("user", 200);
     },
 
     routes() {
       this.namespace = "api";
       this.timing = 750; // milliseconds
 
-      this.get("/users");
+      // Implementing pagination in MirageJS
+      this.get("/users", function (schema, request) {
+        const { page = 1, per_page = 10 } = request.queryParams;
+
+        const total = schema.all("user").length; // discover how many user registers we have
+
+        const pageStart = (Number(page) - 1) * Number(per_page);
+        const pageEnd = pageStart + Number(per_page);
+
+        const users = this.serialize(schema.all("user")).users.slice(
+          pageStart,
+          pageEnd
+        );
+
+        return new Response(
+          200, //status code
+          { "x-total-count": String(total) }, // headers
+          { users } // the body/content
+        );
+      });
+
       this.post("/users");
 
       this.namespace = "";
