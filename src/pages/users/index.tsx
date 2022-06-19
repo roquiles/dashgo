@@ -16,21 +16,16 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import Link from "next/link";
-import { useQuery } from "react-query";
+import { useState } from "react";
 import { RiAddLine, RiPencilLine } from "react-icons/ri";
 import { Header } from "../../components/Header/index";
 import { Pagination } from "../../components/Pagination/index";
 import { Sidebar } from "../../components/Sidebar/index";
+import { useUsers } from "../../services/hooks/useUsers";
 
 export default function UserList() {
-  const { data, isLoading, error } = useQuery("users", async () => {
-    const response = await fetch("/api/users");
-    const data = await response.json();
-
-    return data;
-  });
-
-  console.log(data, isLoading, error);
+  const [currentPage, setCurrentPage] = useState(1);
+  const { data, isLoading, isFetching, error } = useUsers(currentPage);
 
   const isWideVersion = useBreakpointValue({ base: false, lg: true });
 
@@ -44,6 +39,9 @@ export default function UserList() {
           <Flex mb="8" justify="space-between" align="center">
             <Heading size="lg" fontWeight="normal">
               Listagem de Usuários
+              {!isLoading && isFetching && (
+                <Spinner size="sm" color="gray.500" ml="4" />
+              )}
             </Heading>
             <Link href={"/users/create"} passHref>
               <Button
@@ -87,95 +85,43 @@ export default function UserList() {
                 </Thead>
 
                 <Tbody>
-                  <Tr>
-                    <Td px={["4", "4", "6"]}>
-                      <Checkbox colorScheme="pink"></Checkbox>
-                    </Td>
-                    <Td>
-                      <Box>
-                        <Text fontWeight="bold">
-                          Roberta Quiles Bettega de Lima
-                        </Text>
-                        <Text fontSize="sm" color="gray.300">
-                          roberta_btg@hotmail.com
-                        </Text>
-                      </Box>
-                    </Td>
-                    {isWideVersion && <Td>23 de maio, 2022</Td>}
-                    {isWideVersion && (
-                      <Td>
-                        <Button
-                          as="a"
-                          size="sm"
-                          fontSize="sm"
-                          colorScheme="purple"
-                          leftIcon={<Icon as={RiPencilLine} fontSize="16" />}
-                        >
-                          Editar
-                        </Button>
+                  {data.users.map((user) => (
+                    <Tr key={user.id}>
+                      <Td px={["4", "4", "6"]}>
+                        <Checkbox colorScheme="pink"></Checkbox>
                       </Td>
-                    )}
-                  </Tr>
-
-                  <Tr>
-                    <Td px={["4", "4", "6"]}>
-                      <Checkbox colorScheme="pink"></Checkbox>
-                    </Td>
-                    <Td>
-                      <Box>
-                        <Text fontWeight="bold">Antônio César da Costa</Text>
-                        <Text fontSize="sm" color="gray.300">
-                          costa.cesar.a@gmail.com
-                        </Text>
-                      </Box>
-                    </Td>
-                    {isWideVersion && <Td>20 de maio, 2022</Td>}
-                    {isWideVersion && (
                       <Td>
-                        <Button
-                          as="a"
-                          size="sm"
-                          fontSize="sm"
-                          colorScheme="purple"
-                          leftIcon={<Icon as={RiPencilLine} fontSize="16" />}
-                        >
-                          Editar
-                        </Button>
+                        <Box>
+                          <Text fontWeight="bold">{user.name}</Text>
+                          <Text fontSize="sm" color="gray.300">
+                            {user.email}
+                          </Text>
+                        </Box>
                       </Td>
-                    )}
-                  </Tr>
-
-                  <Tr>
-                    <Td px={["4", "4", "6"]}>
-                      <Checkbox colorScheme="pink"></Checkbox>
-                    </Td>
-                    <Td>
-                      <Box>
-                        <Text fontWeight="bold">José Airton da Costa</Text>
-                        <Text fontSize="sm" color="gray.300">
-                          jose.airton@hotmail.com
-                        </Text>
-                      </Box>
-                    </Td>
-                    {isWideVersion && <Td>23 de maio, 2022</Td>}
-                    {isWideVersion && (
-                      <Td>
-                        <Button
-                          as="a"
-                          size="sm"
-                          fontSize="sm"
-                          colorScheme="purple"
-                          leftIcon={<Icon as={RiPencilLine} fontSize="16" />}
-                        >
-                          Editar
-                        </Button>
-                      </Td>
-                    )}
-                  </Tr>
+                      {isWideVersion && <Td>{user.createdAt}</Td>}
+                      {isWideVersion && (
+                        <Td>
+                          <Button
+                            as="a"
+                            size="sm"
+                            fontSize="sm"
+                            colorScheme="purple"
+                            leftIcon={<Icon as={RiPencilLine} fontSize="16" />}
+                          >
+                            Editar
+                          </Button>
+                        </Td>
+                      )}
+                    </Tr>
+                  ))}
                 </Tbody>
               </Table>
 
-              <Pagination />
+              <Pagination
+                totalCountOfRegisters={data.totalCount}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
             </>
           )}
         </Box>
