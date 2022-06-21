@@ -1,14 +1,25 @@
-import { createServer, Factory, Model, Response } from "miragejs";
+import {
+  createServer,
+  Factory,
+  Model,
+  Response,
+  ActiveModelSerializer,
+} from "miragejs";
 import faker from "faker";
 
 type User = {
   name: string;
   email: string;
-  created_at: string;
+  createdAt: string;
 };
 
 export function makeServer() {
   const server = createServer({
+    // Serializer determina para o MirageJS como ele deve interpretar os dados que são enviados por ele
+    serializers: {
+      application: ActiveModelSerializer,
+    },
+
     models: {
       user: Model.extend<Partial<User>>({}),
     },
@@ -55,6 +66,9 @@ export function makeServer() {
           { users } // the body/content
         );
       });
+
+      // Definindo esta rota, o Mirage cria automaticamente uma rota capaz de listar usuários pelo seu ID
+      this.get("/users/:id");
 
       this.post("/users");
 
